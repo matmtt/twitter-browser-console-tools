@@ -1,13 +1,17 @@
-## Mass Repost Removal Tool
-
-F12 on browser
+## How to use
+Press F12 on your browser
 Go to console tab
 
-Run the following on your X profile to remove reposts:
+Copy and paste the following javascript codes
+
+## Repost Removal Tool
+
+Removes all reposts you made.
+Run this code while in: https://x.com/YOURPROFILE
 
 ```javascript
-// Script para remover retuítes em massa — adaptado ao seletor data-testid="unretweetConfirm"
-// Cole no Console (F12) e pressione Enter
+// Mass retweet removal — seletor data-testid="unretweetConfirm"
+// Paste on Browser Console (F12) and press enter
 
 (async () => {
   const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -49,3 +53,11 @@ Run the following on your X profile to remove reposts:
   console.log(`Retuítes removidos: ${count}`);
 })();
 ```
+
+## Post Removal Tool
+
+Removes all posts you made.
+Run this code while in: https://x.com/YOURPROFILE
+
+
+
