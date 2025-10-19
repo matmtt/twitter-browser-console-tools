@@ -201,3 +201,9 @@ Run this code while in: https://x.com/YOURPROFILE
 })();
 ```
 
+## Replies Removal Tool
+
+Removes all your replies
+Run this code while in: https://x.com/YOURPROFILE/with_replies
+
+
