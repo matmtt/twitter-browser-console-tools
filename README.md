@@ -17,7 +17,7 @@ Run this code while in: https://x.com/YOURPROFILE
   const delay = ms => new Promise(r => setTimeout(r, ms));
   const clickDelay = 800;
   const popupDelay = 600;
-  const limit = 300; // máximo de retuítes a remover
+  const limit = 300;
 
   function findRetweetButtons() {
     return Array.from(document.querySelectorAll('button[data-testid="unretweet"]'))
@@ -25,7 +25,7 @@ Run this code while in: https://x.com/YOURPROFILE
   }
 
   async function confirmUnretweet() {
-    for (let i = 0; i < 15; i++) { // tenta por ~1s achar o botão de confirmação
+    for (let i = 0; i < 15; i++) {
       const confirmBtn = document.querySelector('[data-testid="unretweetConfirm"]');
       if (confirmBtn && confirmBtn.offsetParent !== null) {
         confirmBtn.click();
