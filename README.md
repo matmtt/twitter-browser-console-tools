@@ -184,3 +184,79 @@ Run this code while in: https://x.com/YOURPROFILE or/and https://x.com/YOURPROFI
   console.log(`\n🎉 Finished! Total: ${count}`);
 })();
 ```
+## Likes Removal Tool
+
+```javascript
+// Mass likes removal
+// Paste on Browser Console (F12) and press enter
+
+(async () => {
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    const clickDelay = 500; // Aumentado para maior confiabilidade
+    const maxScrollAttempts = 5;
+
+    function findLikedCells() {
+        return Array.from(document.querySelectorAll('[data-testid="cellInnerDiv"]'))
+            .filter(cell => {
+                const unlikeBtn = cell.querySelector('button[data-testid="unlike"]');
+                return unlikeBtn && unlikeBtn.offsetParent !== null;
+            });
+    }
+
+    function findUnlikeButtonInCell(cell) {
+        const unlikeBtn = cell.querySelector('button[data-testid="unlike"][aria-label*="Liked"]');
+        return unlikeBtn && unlikeBtn.offsetParent !== null ? unlikeBtn : null;
+    }
+
+    // Verificação inicial para garantir que estamos na página de likes
+    if (!window.location.pathname.includes('/likes')) {
+        console.error('❌ Por favor, execute este script na página de likes (https://x.com/YOURPROFILE/likes)');
+        return;
+    }
+
+    console.log(`🚀 Iniciando remoção de likes`);
+
+    let count = 0;
+    let scrollAttempts = 0;
+
+    while (true) {
+        const cells = findLikedCells();
+
+        if (cells.length === 0) {
+            console.log(`⬇️ Rolando página ${scrollAttempts + 1}/${maxScrollAttempts}`);
+            scrollAttempts++;
+            
+            if (scrollAttempts >= maxScrollAttempts) {
+                console.log('✅ Concluído');
+                alert(`🎉 Finalizado! Total de likes removidos: ${count}`);
+                break;
+            }
+
+            window.scrollBy(0, window.innerHeight * 0.75); // Ajustado para rolar mais
+            await delay(1500); // Aumentado para esperar carregamento
+            continue;
+        }
+
+        scrollAttempts = 0;
+
+        const cell = cells[0];
+        const unlikeBtn = findUnlikeButtonInCell(cell);
+
+        if (!unlikeBtn) {
+            console.log('⚠️ Botão de "unlike" não encontrado, rolando...');
+            window.scrollBy(0, window.innerHeight * 0.5);
+            await delay(1500);
+            continue;
+        }
+
+        unlikeBtn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        await delay(500);
+        unlikeBtn.click();
+        count++;
+        console.log(`✅ Like removido (${count} total)`);
+        await delay(clickDelay);
+    }
+
+    console.log(`\n🎉 Finalizado! Total de likes removidos: ${count}`);
+})();
+```
