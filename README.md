@@ -54,46 +54,47 @@ Run this code while in: https://x.com/YOURPROFILE
 })();
 ```
 
-## Post Removal Tool
+## Post / Replies Removal Tool
 
-Removes all posts you made.
-Run this code while in: https://x.com/YOURPROFILE
+Removes all posts or replies you made.
+Run this code while in: https://x.com/YOURPROFILE or/and https://x.com/YOURPROFILE/with_replies
 
 ```javascript
-// Mass post removal
+// Mass post/replies removal
 // Paste on Browser Console (F12) and press enter
 
 (async () => {
-  // Configuration
   const delay = ms => new Promise(r => setTimeout(r, ms));
-  const clickDelay = 800;        // Delay between actions (ms)
-  const menuDelay = 600;         // Delay for menu to appear (ms)
-  const maxScrollAttempts = 5;   // Max scrolls without finding new posts
+  const clickDelay = 250;
+  const menuDelay = 100;
+  const maxScrollAttempts = 5;
 
-  /**
-   * Finds all "More" buttons in posts within article elements
-   * Filters out hidden elements and non-post buttons
-   * @returns {Array} Array of More buttons
-   */
-  function findMoreButtons() {
-    return Array.from(document.querySelectorAll('article button[data-testid="caret"][aria-label="More"]'))
-      .filter(b => b.offsetParent !== null);
+  function extractHandleFromURL() {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    return pathParts[0];
   }
 
-  /**
-   * Gets all visible menu items from the dropdown
-   * @returns {Array} Array of menu item elements
-   */
+  function findUserReplyCells(userHandle) {
+    return Array.from(document.querySelectorAll('[data-testid="cellInnerDiv"]'))
+      .filter(cell => {
+        const cellText = cell.innerText || '';
+        return cellText.includes(`@${userHandle}`) && cell.offsetParent !== null;
+      });
+  }
+
+  function findMoreButtonInCell(cell) {
+    const article = cell.querySelector('article');
+    if (!article) return null;
+    
+    const moreBtn = article.querySelector('button[data-testid="caret"][aria-label="More"]');
+    return moreBtn && moreBtn.offsetParent !== null ? moreBtn : null;
+  }
+
   function getMenuItems() {
     return Array.from(document.querySelectorAll('div[role="menuitem"][tabindex="0"]'))
       .filter(e => e.offsetParent !== null);
   }
 
-  /**
-   * Looks for and clicks the "Delete" option in the menu
-   * If found, returns true; otherwise returns false (indicating a retweet)
-   * @returns {Promise<boolean>} true if delete option was found and clicked
-   */
   async function clickDeleteIfPresent() {
     for (let i = 0; i < 15; i++) {
       const items = getMenuItems();
@@ -111,11 +112,6 @@ Run this code while in: https://x.com/YOURPROFILE
     return false;
   }
 
-  /**
-   * Confirms the deletion by clicking the confirmation button
-   * Retries up to 15 times with 100ms delay between attempts
-   * @returns {Promise<boolean>} true if confirmation button was found and clicked
-   */
   async function confirmDelete() {
     for (let i = 0; i < 15; i++) {
       const confirmBtn = document.querySelector('[data-testid="confirmationSheetConfirm"]');
@@ -128,23 +124,21 @@ Run this code while in: https://x.com/YOURPROFILE
     return false;
   }
 
-  // Main script logic
-  let count = 0;                 // Posts deleted counter
-  let currentIndex = 0;          // Current post index in the list
-  let scrollAttempts = 0;        // Consecutive scroll attempts without new posts
+  const userHandle = extractHandleFromURL();
+  console.log(`🚀 Started for @${userHandle}`);
 
-  console.log('🚀 Twitter/X Post Deleter started');
+  let count = 0;
+  let scrollAttempts = 0;
 
   while (true) {
-    const btns = findMoreButtons();
+    const cells = findUserReplyCells(userHandle);
 
-    // Case 1: No posts found - scroll and try again
-    if (btns.length === 0) {
-      console.log(`📜 No posts found. Scroll attempt ${scrollAttempts + 1}/${maxScrollAttempts}`);
+    if (cells.length === 0) {
+      console.log(`⬇️ Scrolling down ${scrollAttempts + 1}/${maxScrollAttempts}`);
       scrollAttempts++;
       
       if (scrollAttempts >= maxScrollAttempts) {
-        console.log('✅ Reached scroll limit. No more posts to delete.');
+        console.log('✅ Done');
         break;
       }
 
@@ -153,57 +147,40 @@ Run this code while in: https://x.com/YOURPROFILE
       continue;
     }
 
-    // Case 2: Current index is beyond the list length - reached end of visible posts
-    if (currentIndex >= btns.length) {
-      console.log(`📜 End of post list. Scroll attempt ${scrollAttempts + 1}/${maxScrollAttempts}`);
-      scrollAttempts++;
-      
-      if (scrollAttempts >= maxScrollAttempts) {
-        console.log('✅ Reached scroll limit. No more posts to delete.');
-        break;
-      }
-
-      window.scrollBy(0, window.innerHeight * 0.5);
-      await delay(1000);
-      continue;
-    }
-
-    // Reset scroll attempts when we successfully process posts
     scrollAttempts = 0;
 
-    // Get the current post's More button and attempt deletion
-    const btn = btns[currentIndex];
-    btn.scrollIntoView({ block: 'center' });
+    const cell = cells[0];
+    const moreBtn = findMoreButtonInCell(cell);
+
+    if (!moreBtn) {
+      console.log('⚠️ No More button found, scrolling...');
+      window.scrollBy(0, window.innerHeight * 0.5);
+      await delay(1000);
+      continue;
+    }
+
+    moreBtn.scrollIntoView({ block: 'center' });
     await delay(300);
-    btn.click();
+    moreBtn.click();
     await delay(menuDelay);
 
     const deleted = await clickDeleteIfPresent();
     
     if (deleted) {
-      // Successfully found delete option - confirm the deletion
       await delay(300);
       await confirmDelete();
       count++;
-      console.log(`✅ Post deleted (${count} total)`);
-      // Note: Do NOT increment currentIndex - the next post moves up to this position
+      console.log(`✅ Deleted (${count} total)`);
+      await delay(clickDelay);
+      continue;
     } else {
-      // No delete option found - this is a retweet, skip it
-      console.log(`⏭️  Retweet detected, skipping to next post`);
-      document.body.click(); // Close the menu
-      currentIndex++; // Move to next post
+      console.log(`⏭️ Skipping`);
+      document.body.click();
+      window.scrollBy(0, window.innerHeight * 0.3);
+      await delay(clickDelay);
     }
-
-    await delay(clickDelay);
   }
 
-  console.log(`\n🎉 Script finished! Total posts deleted: ${count}`);
+  console.log(`\n🎉 Finished! Total: ${count}`);
 })();
 ```
-
-## Replies Removal Tool
-
-Removes all your replies
-Run this code while in: https://x.com/YOURPROFILE/with_replies
-
-
