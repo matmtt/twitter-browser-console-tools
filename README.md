@@ -184,10 +184,13 @@ Run this code while in: https://x.com/YOURPROFILE or/and https://x.com/YOURPROFI
   console.log(`\n🎉 Finished! Total: ${count}`);
 })();
 ```
-## Likes Removal Tool
+## Like Removal Tool
+
+Removes all posts or replies you made.
+Run this code while in: https://x.com/YOURPROFILE/likes
 
 ```javascript
-// Mass likes removal
+// Mass like removal
 // Paste on Browser Console (F12) and press enter
 
 (async () => {
